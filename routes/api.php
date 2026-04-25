@@ -26,6 +26,11 @@ Route::get('/test', function () {
         'message' => 'API is working'
     ]);
 });
+Route::get('/migrate', function () {
+    \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+    return "Migrated successfully";
+});
+
 Route::post('/register', [AuthController::class,'register']);
 Route::post('/login', [AuthController::class,'login']);
 Route::post('/student-register', [AuthController::class,'studentRegister']);
