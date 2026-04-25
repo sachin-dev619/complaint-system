@@ -31,6 +31,14 @@ Route::get('/migrate', function () {
     return "Migrated successfully";
 });
 
+Route::get('/check-db', function () {
+    return [
+        'host' => env('DB_HOST'),
+        'db' => env('DB_DATABASE'),
+        'user' => env('DB_USERNAME'),
+    ];
+});
+
 Route::post('/register', [AuthController::class,'register']);
 Route::post('/login', [AuthController::class,'login']);
 Route::post('/student-register', [AuthController::class,'studentRegister']);
