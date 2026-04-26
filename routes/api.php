@@ -44,6 +44,12 @@ Route::get('/check-db', function () {
     ];
 });
 
+Route::get('/clear', function () {
+    \Illuminate\Support\Facades\Artisan::call('config:clear');
+    \Illuminate\Support\Facades\Artisan::call('cache:clear');
+    return "Cleared";
+});
+
 Route::post('/register', [AuthController::class,'register']);
 Route::post('/login', [AuthController::class,'login']);
 Route::post('/student-register', [AuthController::class,'studentRegister']);

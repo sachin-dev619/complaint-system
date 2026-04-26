@@ -25,7 +25,9 @@ return [
 
     'allowed_origins' => [
         'http://127.0.0.1:4200',
-        'http://localhost:4200'
+        'http://localhost:4200',
+         // ✅ ADD YOUR VERCEL FRONTEND URL
+        'https://complaint-frontend-qs8l40vp8-sachins-projects-da9a2415.vercel.app'
     ],
 
     'allowed_origins_patterns' => [],
@@ -36,5 +38,5 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => true, // ✅ MUST BE TRUE for auth/broadcasting
+    'supports_credentials' => false, // ✅ MUST BE TRUE for auth/broadcasting
 ];
