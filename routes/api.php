@@ -31,6 +31,11 @@ Route::get('/migrate', function () {
     return "Migrated successfully";
 });
 
+Route::get('/seed', function () {
+    \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
+    return "Seeder run successfully";
+});
+
 Route::get('/check-db', function () {
     return [
         'host' => env('DB_HOST'),
