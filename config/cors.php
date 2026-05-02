@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'paths' => [
+'paths' => [
         'api/*',
         'sanctum/csrf-cookie',
         'broadcasting/auth',
@@ -23,31 +23,24 @@ return [
 
     'allowed_methods' => ['*'],
 
-    // ✅ Keep only fixed origins here
     'allowed_origins' => [
         'http://127.0.0.1:4200',
         'http://localhost:4200',
         'http://127.0.0.1:4201',
         'http://localhost:4201',
-        'https://complaint-frontend-ctpoasj6z-sachins-projects-da9a2415.vercel.app/login',
-
-        // OPTIONAL: if you have a stable Vercel production URL
-        // 'https://complaint-frontend.vercel.app',
     ],
 
-    // ✅ VERY IMPORTANT: allow dynamic Vercel URLs
+    // ✅ handle ALL vercel preview URLs
     'allowed_origins_patterns' => [
-        '^https:\/\/complaint-frontend-.*\.vercel\.app$',
+        '^https:\/\/.*\.vercel\.app$',
     ],
 
     'allowed_headers' => ['*'],
-
     'exposed_headers' => [],
-
     'max_age' => 0,
 
-    // ✅ MUST be true for login, Sanctum, broadcasting, cookies
-    // 'supports_credentials' => true,
+    // 🔥 KEEP FALSE for now (to fix 500 error)
+    'supports_credentials' => true,
 
-    'supports_credentials' => false, // ✅ MUST BE TRUE for auth/broadcasting
+    // 'supports_credentials' => false, // ✅ MUST BE TRUE for auth/broadcasting
 ];
