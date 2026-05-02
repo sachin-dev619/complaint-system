@@ -15,32 +15,32 @@ return [
     |
     */
 
-'paths' => [
+     'paths' => [
         'api/*',
         'sanctum/csrf-cookie',
-        'broadcasting/auth',
+        'broadcasting/auth'   // ✅ IMPORTANT ADD THIS
     ],
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [
+   'allowed_origins' => [
         'http://127.0.0.1:4200',
         'http://localhost:4200',
-        'http://127.0.0.1:4201',
-        'http://localhost:4201',
+        'http://127.0.0.1:4201',   // ✅ ADD THIS
+        'http://localhost:4201',   // ✅ ADD THIS
+        'https://complaint-frontend-qs8l40vp8-sachins-projects-da9a2415.vercel.app',
+        'https://complaint-frontend-ctpoasj6z-sachins-projects-da9a2415.vercel.app'
     ],
 
-    // ✅ handle ALL vercel preview URLs
-    'allowed_origins_patterns' => [
-        '^https:\/\/.*\.vercel\.app$',
-    ],
+    'supports_credentials' => true,
+
+    'allowed_origins_patterns' => [],
 
     'allowed_headers' => ['*'],
-    'exposed_headers' => [],
-    'max_age' => 0,
 
-    // 🔥 KEEP FALSE for now (to fix 500 error)
-    'supports_credentials' => false,
+    'exposed_headers' => [],
+
+    'max_age' => 0,
 
     // 'supports_credentials' => false, // ✅ MUST BE TRUE for auth/broadcasting
 ];
