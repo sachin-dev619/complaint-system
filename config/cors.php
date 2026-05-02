@@ -29,6 +29,7 @@ return [
         'http://localhost:4200',
         'http://127.0.0.1:4201',
         'http://localhost:4201',
+        'https://complaint-frontend-ctpoasj6z-sachins-projects-da9a2415.vercel.app/login',
 
         // OPTIONAL: if you have a stable Vercel production URL
         // 'https://complaint-frontend.vercel.app',
