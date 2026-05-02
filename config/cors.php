@@ -40,7 +40,7 @@ return [
     'max_age' => 0,
 
     // 🔥 KEEP FALSE for now (to fix 500 error)
-    'supports_credentials' => true,
+    'supports_credentials' => false,
 
     // 'supports_credentials' => false, // ✅ MUST BE TRUE for auth/broadcasting
 ];
