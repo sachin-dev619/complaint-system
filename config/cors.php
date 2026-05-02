@@ -47,7 +47,7 @@ return [
     'max_age' => 0,
 
     // ✅ MUST be true for login, Sanctum, broadcasting, cookies
-    'supports_credentials' => true,
+    // 'supports_credentials' => true,
 
-    // 'supports_credentials' => false, // ✅ MUST BE TRUE for auth/broadcasting
+    'supports_credentials' => false, // ✅ MUST BE TRUE for auth/broadcasting
 ];
