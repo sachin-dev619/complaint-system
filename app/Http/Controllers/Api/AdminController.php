@@ -17,11 +17,32 @@ class AdminController extends Controller
     // =========================
     public function allComplaints(Request $request)
     {
-        $perPage = $request->get('per_page', 10); // default 10
+        $perPage = (int) $request->get('per_page', 10);
 
-        $complaints = Complaint::with('user')
-            ->latest()
-            ->paginate($perPage);
+        $query = Complaint::with(['user', 'category', 'subcategory'])
+            ->latest();
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('priority')) {
+            $query->where('priority', $request->priority);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                    ->orWhere('complaint_text', 'like', "%{$search}%")
+                    ->orWhere('complaint_no', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($userQuery) use ($search) {
+                        $userQuery->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        $complaints = $query->paginate($perPage);
 
         return response()->json([
             'status' => true,
@@ -36,11 +57,48 @@ class AdminController extends Controller
     }
 
     // =========================
+    // 📊 DASHBOARD STATS
+    // =========================
+    public function dashboardStats()
+    {
+        $statusCounts = [
+            'Pending' => Complaint::where('status', 'Pending')->count(),
+            'In Progress' => Complaint::where('status', 'In Progress')->count(),
+            'Resolved' => Complaint::where('status', 'Resolved')->count(),
+        ];
+
+        $monthly = Complaint::selectRaw('MONTH(created_at) as month, COUNT(*) as total')
+            ->whereYear('created_at', date('Y'))
+            ->groupBy('month')
+            ->pluck('total', 'month');
+
+        $monthlyCounts = [];
+        for ($i = 1; $i <= 12; $i++) {
+            $monthlyCounts[] = (int) ($monthly[$i] ?? 0);
+        }
+
+        $recent = Complaint::with('user')
+            ->latest()
+            ->limit(5)
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'data' => [
+                'total' => array_sum($statusCounts),
+                'by_status' => $statusCounts,
+                'monthly' => $monthlyCounts,
+                'recent' => $recent,
+            ]
+        ]);
+    }
+
+    // =========================
     // 📄 GET SINGLE COMPLAINT
     // =========================
     public function show($id)
     {
-        $complaint = Complaint::with('user')->find($id);
+        $complaint = Complaint::with(['user', 'category', 'subcategory'])->find($id);
 
         if (!$complaint) {
             return response()->json([

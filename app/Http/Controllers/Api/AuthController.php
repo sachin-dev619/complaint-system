@@ -12,29 +12,36 @@ class AuthController extends Controller
 {
     public function register(Request $request)
     {
-        $student = Student::where('roll_no',$request->roll_no)
-            ->where('class_id',$request->class_id)
-            ->where('division_id',$request->division_id)
-            ->first();
-
-        if(!$student){
-            return response()->json(['message'=>'Invalid student'],404);
-        }
-
-        // check already registered
-        if(User::where('student_id',$student->id)->exists()){
-            return response()->json(['message'=>'Already registered'],400);
-        }
-
-        $user = User::create([
-            'name'=>$student->first_name.' '.$student->last_name,
-            'email'=>$request->email,
-            'password'=>Hash::make($request->password),
-            'student_id'=>$student->id,
-            'role'=>'student'
+        $request->validate([
+            'roll_no' => 'required',
+            'class_models_id' => 'required|exists:class_models,id',
+            'division_id' => 'required|exists:divisions,id',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|min:6',
         ]);
 
-        return response()->json(['message'=>'Registered successfully']);
+        $student = Student::where('roll_no', $request->roll_no)
+            ->where('class_models_id', $request->class_models_id)
+            ->where('division_id', $request->division_id)
+            ->first();
+
+        if (!$student) {
+            return response()->json(['message' => 'Invalid student'], 404);
+        }
+
+        if (User::where('student_id', $student->id)->exists()) {
+            return response()->json(['message' => 'Already registered'], 400);
+        }
+
+        User::create([
+            'name' => trim($student->first_name . ' ' . $student->last_name),
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'student_id' => $student->id,
+            'role' => 'student'
+        ]);
+
+        return response()->json(['message' => 'Registered successfully']);
     }
 
     public function studentRegister(Request $request)
@@ -63,16 +70,21 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $user = User::where('email',$request->email)->first();
-        if(!$user || !Hash::check($request->password,$user->password)){
-            return response()->json(['message'=>'Invalid credentials'],401);
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
-            'token'=>$token,
-            'user'=>$user
+            'token' => $token,
+            'user' => $user
         ]);
     }
 

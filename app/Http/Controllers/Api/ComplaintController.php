@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Complaint;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class ComplaintController extends Controller
 {
@@ -14,21 +15,31 @@ class ComplaintController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'title' => 'required',
+            'title' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
-            'complaint_text' => 'required',
+            'subcategory_id' => 'required|exists:subcategories,id',
+            'priority' => 'required|in:Low,Medium,High',
+            'complaint_text' => 'required|string',
+            'file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ]);
 
+        $filePath = null;
+        if ($request->hasFile('file')) {
+            $filePath = $request->file('file')->store('complaints', 'public');
+        }
+
         $complaint = Complaint::create([
-            'complaint_no' => 'CMP-' . date('Y') . '-' . rand(1000,9999),
+            'complaint_no' => $this->generateComplaintNo(),
             'user_id' => auth()->id(),
             'title' => $request->title,
             'category_id' => $request->category_id,
+            'subcategory_id' => $request->subcategory_id,
+            'priority' => $request->priority,
             'complaint_text' => $request->complaint_text,
+            'file' => $filePath,
             'status' => 'Pending',
         ]);
 
-        // ✅ ADMIN NOTIFICATION (NO NULL ISSUE)
         $adminNotification = NotificationService::create(
             null,
             'New Complaint Received',
@@ -38,7 +49,6 @@ class ComplaintController extends Controller
 
         event(new NotificationCreated($adminNotification));
 
-        // ✅ STUDENT NOTIFICATION
         $studentNotification = NotificationService::create(
             $complaint->user_id,
             'Complaint Submitted',
@@ -50,14 +60,13 @@ class ComplaintController extends Controller
 
         return response()->json([
             'message' => 'Complaint submitted successfully',
-            'data' => $complaint
-        ]);
+            'data' => $complaint->load(['category', 'subcategory'])
+        ], 201);
     }
 
-    // ✅ Student Complaints (with category)
     public function myComplaints()
     {
-        $complaints = Complaint::with('category') // 🔥 important
+        $complaints = Complaint::with(['category', 'subcategory'])
             ->where('user_id', auth()->id())
             ->latest()
             ->get();
@@ -67,8 +76,9 @@ class ComplaintController extends Controller
 
     public function show($id)
     {
-        $complaint = \App\Models\Complaint::where('id', $id)
-            ->where('user_id', auth()->id()) // 🔐 IMPORTANT
+        $complaint = Complaint::with(['category', 'subcategory'])
+            ->where('id', $id)
+            ->where('user_id', auth()->id())
             ->firstOrFail();
 
         return response()->json($complaint);
@@ -80,20 +90,22 @@ class ComplaintController extends Controller
             ->where('user_id', auth()->id())
             ->firstOrFail();
 
-        // ✅ VALIDATION
+        if ($complaint->status !== 'Pending') {
+            return response()->json([
+                'message' => 'Only pending complaints can be edited'
+            ], 403);
+        }
+
         $request->validate([
-            'title' => 'required',
+            'title' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
-            'subcategory_id' => 'required',
-            'priority' => 'required',
-            'complaint_text' => 'required',
+            'subcategory_id' => 'required|exists:subcategories,id',
+            'priority' => 'required|in:Low,Medium,High',
+            'complaint_text' => 'required|string',
             'file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120'
         ]);
 
-        // ✅ FILE UPLOAD
         if ($request->hasFile('file')) {
-
-            // delete old file (optional)
             if ($complaint->file && file_exists(storage_path('app/public/' . $complaint->file))) {
                 unlink(storage_path('app/public/' . $complaint->file));
             }
@@ -103,7 +115,6 @@ class ComplaintController extends Controller
             $filePath = $complaint->file;
         }
 
-        // ✅ UPDATE ALL FIELDS
         $complaint->update([
             'title' => $request->title,
             'category_id' => $request->category_id,
@@ -115,7 +126,16 @@ class ComplaintController extends Controller
 
         return response()->json([
             'message' => 'Complaint updated successfully',
-            'data' => $complaint
+            'data' => $complaint->fresh(['category', 'subcategory'])
         ]);
+    }
+
+    private function generateComplaintNo(): string
+    {
+        do {
+            $complaintNo = 'CMP-' . date('Y') . '-' . strtoupper(Str::random(6));
+        } while (Complaint::where('complaint_no', $complaintNo)->exists());
+
+        return $complaintNo;
     }
 }

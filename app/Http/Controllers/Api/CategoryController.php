@@ -12,7 +12,16 @@ class CategoryController extends Controller
      // ✅ List
     public function index(Request $request)
     {
-        $perPage = $request->get('per_page', 10);
+        if ($request->get('all') == 1 || $request->get('per_page') === 'all') {
+            $categories = Category::orderBy('name')->get();
+
+            return response()->json([
+                'status' => true,
+                'data' => $categories
+            ]);
+        }
+
+        $perPage = (int) $request->get('per_page', 10);
 
         $categories = Category::latest()->paginate($perPage);
 

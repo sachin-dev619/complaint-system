@@ -26,29 +26,6 @@ Route::get('/test', function () {
         'message' => 'API is working'
     ]);
 });
-Route::get('/migrate', function () {
-    \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
-    return "Migrated successfully";
-});
-
-Route::get('/seed', function () {
-    \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
-    return "Seeder run successfully";
-});
-
-Route::get('/check-db', function () {
-    return [
-        'host' => env('DB_HOST'),
-        'db' => env('DB_DATABASE'),
-        'user' => env('DB_USERNAME'),
-    ];
-});
-
-Route::get('/clear', function () {
-    \Illuminate\Support\Facades\Artisan::call('config:clear');
-    \Illuminate\Support\Facades\Artisan::call('cache:clear');
-    return "Cleared";
-});
 
 Route::post('/register', [AuthController::class,'register']);
 Route::post('/login', [AuthController::class,'login']);
@@ -60,22 +37,16 @@ Route::post('/student-register', [AuthController::class,'studentRegister']);
 // =======================
 Route::middleware('auth:sanctum')->group(function () {
 
-    // 🔓 Common (Admin + Student दोनों use कर सकते हैं)
     Route::post('/logout', [AuthController::class,'logout']);
 
-    // ✅ IMPORTANT: Move outside admin
     Route::get('/categories', [CategoryController::class, 'index']);
     Route::get('/subcategories', [SubcategoryController::class, 'index']);
 
-    // 👨‍🎓 Student notifications
     Route::get('/notifications', [NotificationController::class, 'index']);
-
-    // 👨‍💼 Admin notifications
     Route::get('/admin/notifications', [NotificationController::class, 'adminNotifications']);
-
     Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::put('/notifications/read-all', [NotificationController::class, 'markAllRead']);
-    
+
 
     // =======================
     // 🎓 STUDENT ROUTES
@@ -88,10 +59,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/complaints/{id}', [ComplaintController::class,'update']);
 
         Route::get('/student-profile', [StudentController::class,'profile']);
-
-        // ✅ Correct order
         Route::get('/subcategories/{category_id}', [SubcategoryController::class, 'byCategory']);
-        Route::delete('/subcategories/{id}', [SubcategoryController::class, 'destroy']);
     });
 
 
@@ -100,32 +68,25 @@ Route::middleware('auth:sanctum')->group(function () {
     // =======================
     Route::middleware('role:admin')->group(function () {
 
-        // 📌 Complaint Management
         Route::get('/all-complaints', [AdminController::class,'allComplaints']);
+        Route::get('/admin/dashboard-stats', [AdminController::class,'dashboardStats']);
         Route::post('/update-status/{id}', [AdminController::class,'updateStatus']);
         Route::get('/admin/complaints/{id}', [AdminController::class,'show']);
 
-        // 📌 Student Management
         Route::post('/students', [StudentController::class, 'store']);
         Route::get('/students', [StudentController::class, 'index']);
 
-        // 📌 Category Management (Admin only)
         Route::post('/categories', [CategoryController::class, 'store']);
         Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
 
-        // 📌 Subcategory Management (Admin only)
         Route::post('/subcategories', [SubcategoryController::class, 'store']);
         Route::delete('/subcategories/{id}', [SubcategoryController::class, 'destroy']);
 
-        // 📊 Reports
         Route::get('/reports/daily', [ReportController::class, 'daily']);
         Route::get('/reports/monthly', [ReportController::class, 'monthly']);
 
-        // 👤 Admin Profile
         Route::get('/profile', [AdminController::class,'profile']);
         Route::post('/profile-update', [AdminController::class,'updateProfile']);
         Route::post('/change-password', [AdminController::class,'changePassword']);
     });
-    
-
 });
