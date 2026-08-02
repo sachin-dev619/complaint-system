@@ -12,27 +12,18 @@ class Complaint extends Model
 
     protected $guarded = [];
 
-    // public function user()
-    // {
-    //     return $this->belongsTo(User::class);
-    // }
-
-     // ✅ USER RELATION (keep only ONE)
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    // ✅ CATEGORY RELATION
     public function category(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Category::class);
+        return $this->belongsTo(Category::class);
     }
 
-    // ✅ SUBCATEGORY RELATION
     public function subcategory(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Subcategory::class);
+        return $this->belongsTo(Subcategory::class);
     }
-    
 }

@@ -2,9 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Category;
+use App\Models\Complaint;
+use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 
 class ComplaintSeeder extends Seeder
 {
@@ -13,36 +14,39 @@ class ComplaintSeeder extends Seeder
      */
     public function run(): void
     {
-        $users = DB::table('users')->pluck('id')->toArray();
-        $categories = DB::table('categories')->pluck('id')->toArray();
-        $subcategories = DB::table('subcategories')->pluck('id')->toArray();
+        $students = User::where('role', 'student')->pluck('id');
+        $categories = Category::with('subcategories')->get();
+
+        if ($students->isEmpty() || $categories->isEmpty()) {
+            return;
+        }
+
+        $priorities = ['Low', 'Medium', 'High'];
+        $statuses = ['Pending', 'In Progress', 'Resolved'];
 
         for ($i = 1; $i <= 10; $i++) {
-            DB::table('complaints')->insert([
-                'complaint_no' => 'CMP-' . date('Y') . '-' . rand(1000, 9999),
+            $category = $categories->random();
+            $subcategory = $category->subcategories->isNotEmpty()
+                ? $category->subcategories->random()
+                : null;
 
-                'user_id' => $users[array_rand($users)],
-                'category_id' => $categories[array_rand($categories)],
-                'subcategory_id' => !empty($subcategories) 
-                                    ? $subcategories[array_rand($subcategories)] 
-                                    : null,
+            $status = $statuses[array_rand($statuses)];
 
-                // ✅ NEW FIELDS
-                'title' => 'Complaint ' . $i,
-                'complaint_text' => 'Fan not working in classroom ' . $i,
-
-                'priority' => ['Low', 'Medium', 'High'][rand(0,2)],
-
-                'file' => null,
-
-                'status' => ['Pending', 'In Progress', 'Resolved'][rand(0,2)],
-
-                'admin_remark' => 'Checked by admin',
-                'resolved_at' => rand(0,1) ? now() : null,
-
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            Complaint::updateOrCreate(
+                ['complaint_no' => 'CMP-' . date('Y') . '-' . str_pad((string) $i, 4, '0', STR_PAD_LEFT)],
+                [
+                    'user_id' => $students->random(),
+                    'category_id' => $category->id,
+                    'subcategory_id' => $subcategory?->id,
+                    'title' => 'Complaint ' . $i,
+                    'complaint_text' => 'Sample complaint description for case ' . $i,
+                    'priority' => $priorities[array_rand($priorities)],
+                    'file' => null,
+                    'status' => $status,
+                    'admin_remark' => $status === 'Resolved' ? 'Checked by admin' : null,
+                    'resolved_at' => $status === 'Resolved' ? now() : null,
+                ]
+            );
         }
     }
 }

@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Category;
+use App\Models\Subcategory;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 
 class SubcategorySeeder extends Seeder
 {
@@ -13,23 +13,30 @@ class SubcategorySeeder extends Seeder
      */
     public function run(): void
     {
-         DB::table('subcategories')->insert([
-            [
-                'category_id' => 1,
-                'name' => 'Fan Issue'
-            ],
-            [
-                'category_id' => 1,
-                'name' => 'Light Issue'
-            ],
-            [
-                'category_id' => 2,
-                'name' => 'Water Leakage'
-            ],
-            [
-                'category_id' => 3,
-                'name' => 'Cleaning Problem'
-            ]
-        ]);
+        $items = [
+            'Infrastructure' => ['Fan Issue', 'Light Issue', 'Water Leakage', 'Cleaning Problem'],
+            'Library' => ['Book Not Available', 'Damaged Book'],
+            'IT Support' => ['WiFi Issue', 'Projector Not Working'],
+            'Faculty' => ['Teaching Quality', 'Attendance Issue'],
+            'Student' => ['Bullying', 'Misbehavior'],
+            'Other' => ['General Query'],
+        ];
+
+        foreach ($items as $categoryName => $subcategories) {
+            $category = Category::where('name', $categoryName)->first();
+
+            if (!$category) {
+                continue;
+            }
+
+            foreach ($subcategories as $name) {
+                Subcategory::updateOrCreate(
+                    [
+                        'category_id' => $category->id,
+                        'name' => $name,
+                    ]
+                );
+            }
+        }
     }
 }

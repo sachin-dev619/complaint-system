@@ -36,9 +36,9 @@ class AuthController extends Controller
         User::create([
             'name' => trim($student->first_name . ' ' . $student->last_name),
             'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'password' => $request->password, // hashed via User cast
             'student_id' => $student->id,
-            'role' => 'student'
+            'role' => 'student',
         ]);
 
         return response()->json(['message' => 'Registered successfully']);
@@ -58,11 +58,11 @@ class AuthController extends Controller
         }
 
         User::create([
-            'name' => $student->first_name,
+            'name' => trim($student->first_name . ' ' . $student->last_name),
             'email' => $student->email,
-            'password' => bcrypt($request->password),
+            'password' => $request->password, // hashed via User cast
             'role' => 'student',
-            'student_id' => $student->id
+            'student_id' => $student->id,
         ]);
 
         return response()->json(['message' => 'Password set successfully. You can login now']);

@@ -2,9 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Division;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 
 class DivisionSeeder extends Seeder
 {
@@ -13,10 +12,10 @@ class DivisionSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('divisions')->insert([
-            ['division_name'=>'A'],
-            ['division_name'=>'B'],
-            ['division_name'=>'C'],
-        ]);
+        foreach (['A', 'B', 'C'] as $name) {
+            Division::updateOrCreate(
+                ['division_name' => $name]
+            );
+        }
     }
 }

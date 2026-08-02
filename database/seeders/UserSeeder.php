@@ -2,11 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\Student;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
 {
@@ -15,36 +13,28 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        // DB::table('users')->insert([
-        //     [
-        //         'name'=>'Admin',
-        //         'email'=>'admin@gmail.com',
-        //         'password'=>bcrypt('123456'),
-        //         'role'=>'admin'
-        //     ]
-        // ]);
-        // ADMIN
-        User::create([
-            'name' => 'Admin',
-            'email' => 'admin@gmail.com',
-            'password' => Hash::make('123456'),
-            'role' => 'admin'
-        ]);
+        User::updateOrCreate(
+            ['email' => 'admin@gmail.com'],
+            [
+                'name' => 'Admin',
+                'password' => '123456',
+                'role' => 'admin',
+                'student_id' => null,
+            ]
+        );
 
-        // STUDENT 1
-        // User::create([
-        //     'name' => 'Student One',
-        //     'email' => 'student1@gmail.com',
-        //     'password' => Hash::make('123456'),
-        //     'role' => 'student'
-        // ]);
+        $students = Student::all();
 
-        // // STUDENT 2
-        // User::create([
-        //     'name' => 'Student Two',
-        //     'email' => 'student2@gmail.com',
-        //     'password' => Hash::make('123456'),
-        //     'role' => 'student'
-        // ]);
+        foreach ($students as $student) {
+            User::updateOrCreate(
+                ['email' => $student->email],
+                [
+                    'name' => trim($student->first_name . ' ' . $student->last_name),
+                    'password' => '123456',
+                    'role' => 'student',
+                    'student_id' => $student->id,
+                ]
+            );
+        }
     }
 }
