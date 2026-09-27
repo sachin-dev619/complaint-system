@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Exports\StudentsImportTemplateExport;
 use App\Http\Controllers\Controller;
+use App\Imports\StudentsImport;
 use App\Models\Student;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Facades\Excel;
 
 class StudentController extends Controller
 {
@@ -96,6 +99,85 @@ class StudentController extends Controller
             'status' => true,
             'message' => 'Student added successfully'
         ], 201);
+    }
+
+    // ✅ Download dummy Excel template (Admin only)
+    public function downloadTemplate()
+    {
+        $user = auth()->user();
+
+        if (!$user || $user->role !== 'admin') {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthorized access'
+            ], 403);
+        }
+
+        return Excel::download(
+            new StudentsImportTemplateExport(),
+            'students_import_template.xlsx'
+        );
+    }
+
+    // ✅ Import students from Excel (Admin only)
+    public function import(Request $request)
+    {
+        $user = auth()->user();
+
+        if (!$user || $user->role !== 'admin') {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthorized access'
+            ], 403);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'file' => 'required|file|mimes:xlsx,xls,csv|max:5120',
+        ], [
+            'file.required' => 'Please upload an Excel file',
+            'file.mimes' => 'File must be xlsx, xls, or csv',
+            'file.max' => 'File size must not exceed 5MB',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation errors',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $import = new StudentsImport();
+
+        try {
+            Excel::import($import, $request->file('file'));
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unable to read the Excel file. Please use the provided template.',
+            ], 422);
+        }
+
+        $failedCount = count($import->failures);
+
+        if ($import->imported === 0 && $failedCount === 0) {
+            return response()->json([
+                'status' => false,
+                'message' => 'No student rows found in the file',
+            ], 422);
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => $import->imported > 0
+                ? "{$import->imported} student(s) imported successfully"
+                : 'No students were imported',
+            'data' => [
+                'imported' => $import->imported,
+                'failed' => $failedCount,
+                'failures' => $import->failures,
+            ],
+        ], $import->imported > 0 ? 201 : 422);
     }
 
     // ✅ Student Profile

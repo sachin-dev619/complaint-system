@@ -75,6 +75,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::post('/students', [StudentController::class, 'store']);
         Route::get('/students', [StudentController::class, 'index']);
+        Route::get('/students/import-template', [StudentController::class, 'downloadTemplate']);
+        Route::post('/students/import', [StudentController::class, 'import']);
 
         Route::post('/categories', [CategoryController::class, 'store']);
         Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
